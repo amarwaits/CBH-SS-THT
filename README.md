@@ -1,149 +1,180 @@
-# ![Stampo](https://user-images.githubusercontent.com/6388707/58275504-7818c880-7d95-11e9-84af-f8aa50b93d5f.png) Stampo - TypeScript Microservice Starter
+# CBH-SS-THT
 
-[![styled with prettier](https://img.shields.io/badge/styled%20with-Prettier-blue.svg)](https://github.com/prettier/prettier)
-[![eslint](https://img.shields.io/badge/linted%20by-eslint-brightgreen.svg)](https://eslint.org)
-[![tested with tap](https://img.shields.io/badge/tested%20with-node--tap-yellow.svg)](https://github.com/tapjs/node-tap)
-![Node Build](https://github.com/nucleode/typescript-microservice-starter/workflows/Node%20Build/badge.svg)
-![Docker Build](https://github.com/nucleode/typescript-microservice-starter/workflows/Docker%20Build/badge.svg?branch=master)
+#### Objective
+In this problem we’ll create a micro-service to address some functionality which is useful to derive simplified summary statistics (mean, min, max) on a dataset. The dataset that you’ll be working with can be found later in the document and yes, it’s been kept very simple by design.
 
-`Stampo` is a friction-free features-complete boilerplate for building Node.js backend services and microservices with TypeScript. It works on Windows, Linux, and macOS and makes the developer productive in no time! It supports any _Active LTS_ Node.js version (`12.12.x`, `14.x.x`, `16.x.x`).
+NOTE: Whenever we mention <SS> we mean summary statistics which essentially means 3 values (mean, min, max)
 
-There are only three steps you need to do to be productive after `Stampo` is initialized (follow the [Getting Started](#getting-started) section):
-1. Put your code inside the `./src` folder
-2. Put your tests inside the `./test` folder.
-3. Relax and enjoy coding!
+#### Requirements
+For this assignment, we are looking for following functionality to be implemented:
+1. An API to add a new record to the dataset.
+2. An API to delete a record to the dataset.
+3. An API to fetch SS for salary over the entire dataset. You can ignore the currency (if not mentioned otherwise) of the salary and simply treat salary as a number.
+4. An API to fetch SS for salary for records which satisfy "on_contract": "true".
+5. An API to fetch SS for salary for each department. This means that whatever you’ll do in Step 3, should be done for each department. The return of this API should have 1 SS available for each unique department.
+6. An API to fetch SS for salary for each department and sub-department combination. This is similar to Case 5 but 1 level of nested aggregation.
 
-## Features
+A few notes on implementation:
+- Please have a `readme.md` at the root of your project, which should contain all the necessary steps for us to run your service. In addition your `readme.md` should have examples on running all the API end-points that you’ll implement.
+- Please use docker to bootstrap all infrastructure for this project. This means a `docker-compose.yaml` should be there at the root of your project and that a simple docker-compose up at the root of the project should be sufficient to run your service.
+- One test case for every API that you will implement. The instructions to run the test should be part of your `readme.md`.
+- For this exercise you can use an in-memory data structure to keep the entire data in-memory. This will help you avoid any DB setup. If you feel like it, you can use an in-memory DB implementation like H2 or a standalone binary implementation like SQLLite. Feel free to make a choice here.
+- Implement basic authentication and authorisation. For this part, you can create a dummy user (with any username and password) and then use those credentials to authenticate. As for authorisation, you can use any token based mechanism available in your choice of stack. We’ll test this functionality by first checking for a happy / failed case for authentication and then doing the same for authorisation by trying to alter the authorisation token and see if we are able to interact with the
+APIs.
+- Error handling. For this part we expect at least following things:
+	- The input payloads should be validated for their schema.
+	- The use of proper error codes when authentication and authorisation fails or when there’s a logic error in your code.
 
-* uses [esbuild](https://esbuild.github.io) and [`tsup`](https://tsup.egoist.sh) in dev mode for blazing fast builds and restarts
-* VS Code debugger configs in .vscode folder
-* recommended Dockerfile for secure Node.js production-ready images
-* most strict and backend specific [`tsconfig.json`](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html) configuration
-* configured tests and reporters via [tap](https://node-tap.org)
-* [dotenv](https://github.com/motdotla/dotenv#readme) for development env vars
+#### Tech Design
+We have used in-memory data structures to implement this assignment. APIs to get stats use cache for fast response. Cache is cleared when a new salary record or an existing record is deleted.
+* `src/services/salary-stats.service.ts` defines the business logic to manage & serve the data.
+* `src/controllers/salary.controller.ts` implements the handlers for API end-points.
+* `src/models/salary-stat.request.model.ts` contains the schema objects for add/delete salary record.
+* `src/app.ts` contains the logic to start the web server.
+* `Dockerfile` contains the docker build (& run) steps.
+* `docker-compose.yaml` is the `docker-compose` file configuration file.
 
-## Getting Started
-### Clone the repo
-```
-$ git clone https://github.com/nucleode/typescript-microservice-starter.git {your_project_name}
-$ cd {your_project_name}
-```
+##### Dependencies:
+1. Node v17.x or above (Installation guide: https://www.pluralsight.com/guides/getting-started-with-nodejs)
+2. Latest Docker (Installation guide: https://docs.docker.com/desktop/install/mac-install/)
 
-### Remove references to the original starter
-```
-$ rm -rf .git && npm init
-```
+##### Running the code
+- Run server after moving the root directory of repository
+	>`docker-compose up`
 
-### Initialize a git repository with your own
-```
-$ git init
-```
+##### Test cases
+- Run unit tests after moving the root directory of repository
+	>`npm install`
+	>`npm run test`
 
-### Install development dependencies
-```
-$ npm i
-```
+##### API Endpoints
+1. Login (& get token)
+```php
+Request:
+curl --location --request POST 'http://localhost:8080/api/user/login' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"username": "test",
+	"password": "test232@32"
+}'
 
-### Add remote origin and make an initial commit
+Response:
+{
+	"status": true,
+	"message": "64ee0521-9eac-4004-99db-9f202f1e3a79"
+}
 ```
-$ git remote add origin git@github.com:{your_repository}.git
-$ git add .
-$ git commit -m "Initial commit"
-$ git push -u origin master
-```
-### Start the development server
+2. Add salary record
+```php
+Request:
+curl --location --request PUT 'http://localhost:8080/api/salary-stat/record' \
+--header 'token: 07800e75-9461-4e7e-8731-3e12c7256d36' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"name": "Amar",
+	"salary": "15000",
+	"currency": "USD",
+	"department": "Engineering",
+	"sub_department": "Platform",
+	"on_contract": "true"
+}'
 
+Response:
+{
+	"status": true
+}
 ```
-$ npm run dev
-```
+3. Delete salary record
+```php
+Request:
+curl --location --request DELETE 'http://localhost:8080/api/salary-stat/record' \
+--header 'token: 07800e75-9461-4e7e-8731-3e12c7256d36' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"name": "Rahul",
+	"department": "Engineering",
+	"sub_department": "Platform"
+}'
 
-## Included npm scripts
-`Stampo` includes a bunch of scripts that cover the most common scenarios for Node.js backend projects.
+Response:
+{
+	"status": true
+}
+```
+4. Get overall salary stats for all employees
+```php
+Request:
+curl --location --request GET 'http://localhost:8080/api/salary-stat' \
+--header 'token: 3e75bcd0-8234-408e-8ccd-8d818a6b12c0'
 
-The commands must be run from the project's root folder.
+Response:
+{
+	"status": true,
+	"data": {
+		"min": 0,
+		"max": 0,
+		"mean": 0
+	}
+}
+```
+5. Get overall salary stats for contract employees
+```php
+Request:
+curl --location --request GET 'http://localhost:8080/api/salary-stat?contractOnly=true' \
+--header 'token: 3e75bcd0-8234-408e-8ccd-8d818a6b12c0'
 
-### `dev`
-It runs the project in development mode. It uses [`tsup`](https://tsup.egoist.sh) to watch the `./src/**/*.ts` files, build and restart the server on save. It exposes the debugger on the default port (`9229`), ready to be used by the provided VS Code `attach` configuration. This script runs parallelly [esbuild](https://esbuild.github.io) and `tsc --noEmit` to build your code faster.
+Response:
+{
+	"status": true,
+	"data": {
+		"min": 0,
+		"max": 0,
+		"mean": 0
+	}
+}
 ```
-$ npm run dev
-```
+6. Get department wise salary stats for all employees
+```php
+Request:
+curl --location --request GET 'http://localhost:8080/api/salary-stat/department' \
+--header 'token: 3e75bcd0-8234-408e-8ccd-8d818a6b12c0'
 
-### `build`
-It builds for production all files from the `./src` to the `./build` folder. It uses `tsc` directly and therefore checks types too. It also emits the source maps.
+Response:
+{
+	"status": true,
+	"data": {
+		"engineering" : {
+			"min": 0,
+			"max": 0,
+			"mean": 0
+		}
+	}
+}
 ```
-$ npm run build
-```
+7. Get sub-department wise salary stats for all employees
+```php
+Request:
+curl --location --request GET 'http://localhost:8080/api/salary-stat/sub-department' \
+--header 'token: 3e75bcd0-8234-408e-8ccd-8d818a6b12c0'
 
-### `start`
-It runs previously built code from the `./build` folder. In addition, it uses `--enable-source-maps` flag for native source-maps support. Note: this flag is present in Node.js since version `12.12.x`.
-```
-$ npm run start
-```
-This script is included only for convenience to test the production build locally on your dev machine. If needed, `-r dotenv/config` can be add to load the dev env. It is advised to run Node.js binary directly to avoid any overhead or `sigterm` propagation issues in production.
-```
-$ node --enable-source-maps build/index.js
-```
-
-### `lint`
-It uses [`eslint`](https://eslint.org) and [`prettier`](https://prettier.io) to lint the code. It checks `./src` and `./test` folders. Note: `prettier` is run as `eslint` plugin via [`eslint-plugin-prettier`](https://github.com/prettier/eslint-plugin-prettier).
-```
-$ npm run lint
-```
-If you want to fix all of the fixable problems, run
-```
-$ npm run lint -- --fix
-```
-
-### `update`
-It uses [npm-check](https://www.npmjs.com/package/npm-check) to help you upgrading your dependencies and never have any outdated and broken packages again.
-```
-$ npm run update
-```
-
-### `test`
-It uses [`tap`](https://node-tap.org) to run tests. Since version 15 `tap` needs `ts-node` to run TS files, `Stampo` also includes it.
-```
-$ npm run test
-```
-
-### `test:watch`
-It runs `tap` in [watch mode](https://node-tap.org/docs/watch/) with interactive repl.
-```
-$ npm run test:watch
-```
-
-### `test:report`
-It runs tests and reports the results in the widely used `junit` format using [`tap-mocha-reporter`](https://www.npmjs.com/package/tap-mocha-reporter). The default `xunit` reporter can be changed to anyone from the [supported reporters list](https://node-tap.org/docs/reporting/). This command is mainly intended to be used in CI/CD environments. The generated `junit-testresults.xml` can be consumed by automatic reporting systems.
-
-## Env Vars
-`Stampo` includes [dotenv](https://github.com/motdotla/dotenv#readme). You have to rename `.env.example` to `.env` and put your variables inside it. They will be automatically loaded when running `$ npm run dev` script.
-
-## External typings augmentation
-`Stampo` is configured to allow you to extend typings of external packages using `./typings` folder. The logic behind it is based on [this](https://www.typescriptlang.org/docs/handbook/declaration-files/templates/module-plugin-d-ts.html) official template. To augment a module, create a folder with the same module name you are augmenting and add an `index.d.ts` file inside it. [Here](https://github.com/fox1t/fastify-websocket-router/tree/master/typings/fastify) you can find a real-world example.
-
-## Debugging Steps
-
-* run the `dev` script to start your application (`$ npm run dev`)
-* either
-  * use the VS Code included `attach` config for the best debugging experience
-  <img width="327" alt="image" src="https://user-images.githubusercontent.com/1620916/129894966-15385c33-da0c-4e00-9f6f-a8ddf966e63e.png">
-
-  * use the provided debug URL in Chrome
-
-## Docker Support
-
-`Stampo` provides a `Dockerfile` that follows the best practices regarding Node.js containerized applications.
-* the application is run using a dedicated non-root user
-* the Dockerfile uses a dedicated build step
-
-
-### Build your docker image
-```
-docker build -t my-project-name .
-```
-
-### Run your docker container
-
-```
-docker run -p PORT:PORT my-project-name
+Response:
+{
+	"status": true,
+	"data": {
+		"engineering" : {
+			"platform" : {
+				"min": 0,
+				"max": 0,
+				"mean": 0
+			}
+		},
+		"operations" : {
+			"customeronboarding" : {
+				"min": 0,
+				"max": 0,
+				"mean": 0
+			}
+		},
+	}
+}
 ```
