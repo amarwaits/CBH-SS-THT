@@ -10,7 +10,7 @@ export class RequestLoggerMiddleWare implements ExpressMiddlewareInterface {
     response.startTime = new Date();
     Logger.info(`Request ${request.url}`);
 
-    // if (request.originalUrl === '/api/user/login' || request.originalUrl === '/api/salary-stat/record')
+    if (request.originalUrl === '/api/user/login')
       request.headers.byPass = true
 
     if (!request.headers.token && !request.headers.byPass) {
