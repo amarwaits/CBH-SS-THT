@@ -1,8 +1,6 @@
 import 'reflect-metadata';
-import { IsNotEmpty, IsString, IsOptional, IsBooleanString, IsNumberString, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumberString } from 'class-validator';
 import { Transform } from 'class-transformer';
-
-// import { RequestBase } from '../types';
 
 export class CreateSalaryRecordRequest {
   @Transform((value: string) => value.toLowerCase())

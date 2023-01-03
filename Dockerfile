@@ -12,7 +12,7 @@ COPY package-lock.json $HOME/node/
 
 # change workgin dir and install deps in quiet mode
 WORKDIR $HOME/node
-RUN npm ci -q
+RUN npm install
 
 # copy all app files
 COPY . $HOME/node/
@@ -44,9 +44,9 @@ COPY --chown=app:app --from=build $HOME/node/ $HOME/node/
 USER app
 WORKDIR $HOME/node
 
-EXPOSE 3000
+EXPOSE 8080
 
 ENV NODE_ENV=production
 
 ENTRYPOINT ["dumb-init"]
-CMD ["node", "--enable-source-maps", "build/index.js"]
+CMD ["node", "./dist/app.js"]
