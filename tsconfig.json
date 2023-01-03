@@ -1,13 +1,17 @@
 {
+  "compileOnSave": true,
   "compilerOptions": {
-    "target": "es2020", // as per https://node.green/ v14 fully supports es2020
+    "allowJs": true,
+    "checkJs": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "ES6",
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "build",
+    "outDir": "./dist",
     "pretty": true,
     "noEmitOnError": true,
-    "sourceMap": true,
-    "inlineSources": true,
+    "sourceMap": false,
     "strict": true,
     "noImplicitAny": false,
     "esModuleInterop": true,
@@ -16,11 +20,14 @@
     "noEmitHelpers": true,
     "removeComments": true,
     "newLine": "lf",
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
     "skipLibCheck": true,
+    "strictBindCallApply": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false,
     "lib": [
       "esnext"
     ],
@@ -29,6 +36,13 @@
       "./typings"
     ]
   },
+  "exclude": [
+    "**/node_modules/*",
+    "**/build",
+    "**/dist",
+    "**/*.spec.ts",
+    "**/scripts/*"
+  ],
   "include": [
     "./src/**/*.ts"
   ]
